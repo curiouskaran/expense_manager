@@ -49,6 +49,8 @@ class _MyHomePageState extends State<MyHomePage> {
     }).toList();
   }
 
+  bool _showChart = false;
+
   void _addNewTransaction(String title, double amount, DateTime date) {
     final newTx = Transaction(
         amount: amount,
@@ -78,27 +80,62 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    final isLandScape = mediaQuery.orientation == Orientation.landscape;
+    // appBar Widget
+    final appBar = AppBar(
+      title: Text('Expense Manager'),
+      actions: <Widget>[
+        IconButton(
+          icon: Icon(Icons.add),
+          onPressed: () => _startAddNewTransaction(context),
+        )
+      ],
+    );
+    //Transaction List Widget
+    final txListWidget = Container(
+      height: (mediaQuery.size.height -
+              appBar.preferredSize.height -
+              mediaQuery.padding.top) *
+          (isLandScape ? 0.6 : 0.3),
+      child: TransactionList(
+          userTransactions: _userTransactions,
+          deleteTransaction: _deleteTransaction),
+    );
+    //Chart Widget
+    final chartWidget = Container(
+        height: (mediaQuery.size.height -
+                appBar.preferredSize.height -
+                mediaQuery.padding.top) *
+            (isLandScape ? 0.7 : 0.3),
+        child: Chart(_recentTransactions));
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Expense Manager'),
-        actions: <Widget>[
-          IconButton(
-            icon: Icon(Icons.add),
-            onPressed: () => _startAddNewTransaction(context),
-          )
-        ],
-      ),
-      body: Column(
-        // mainAxisAlignment: MainAxisAlignment.spaceAround,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          Chart(_recentTransactions),
-          Expanded(
-            child: TransactionList(
-                userTransactions: _userTransactions,
-                deleteTransaction: _deleteTransaction),
-          )
-        ],
+      appBar: appBar,
+      body: SingleChildScrollView(
+        child: Column(
+          // mainAxisAlignment: MainAxisAlignment.spaceAround,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            if (isLandScape)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Text('Show Chart'),
+                  Switch(
+                      value: _showChart,
+                      onChanged: (val) {
+                        setState(() {
+                          _showChart = val;
+                        });
+                      })
+                ],
+              ),
+            if (isLandScape) _showChart ? chartWidget : txListWidget,
+            if (!isLandScape) chartWidget,
+            if (!isLandScape) txListWidget
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
